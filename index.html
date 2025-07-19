@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WORDLINE - Daily Word Challenge</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #0a0a0a;
+            color: #ffffff;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+            background-image: 
+                radial-gradient(circle at 20% 80%, rgba(120, 120, 120, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(120, 120, 120, 0.1) 0%, transparent 50%);
+            overflow: hidden;
+        }
+
+        .game-container {
+            background: rgba(20, 20, 20, 0.9);
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+            max-width: 480px;
+            width: 100%;
+            height: 100vh;
+            max-height: 100vh;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        h1 {
+            font-size: 1.8em;
+            color: #ffffff;
+            margin-bottom: 4px;
+            font-weight: 300;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        .subtitle {
+            color: #888;
+            margin-bottom: 15px;
+            font-size: 0.8em;
+            letter-spacing: 1px;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 15px;
+            padding: 12px;
+            border: 1px solid #333;
+            border-radius: 4px;
+            background: rgba(40, 40, 40, 0.3);
+            flex-shrink: 0;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #ffffff;
+            font-family: 'Courier New', monospace;
+        }
+
+        .stat-label {
+            font-size: 0.7em;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 2px;
+        }
+
+        .game-board {
+            display: grid;
+            grid-template-rows: repeat(6, 1fr);
+            gap: 4px;
+            margin-bottom: 15px;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .guess-row {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 4px;
+            height: 100%;
+        }
+
+        .letter-box {
+            width: 100%;
+            height: 100%;
+            min-height: 35px;
+            border: 2px solid #444;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #ffffff;
+            background: #1a1a1a;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+        }
+
+        .letter-box:hover {
+            border-color: #666;
+        }
+
+        .letter-box.correct {
+            background: #ffffff;
+            border-color: #ffffff;
+            color: #000000;
+            animation: flip 0.4s ease;
+        }
+
+        .letter-box.present {
+            background: #666666;
+            border-color: #666666;
+            color: #ffffff;
+            animation: flip 0.4s ease;
+        }
+
+        .letter-box.absent {
+            background: #2a2a2a;
+            border-color: #2a2a2a;
+            color: #666666;
+            animation: flip 0.4s ease;
+        }
+
+        @keyframes flip {
+            0% { transform: rotateY(0deg); }
+            50% { transform: rotateY(90deg); }
+            100% { transform: rotateY(0deg); }
+        }
+
+        .input-section {
+            margin-bottom: 15px;
+            flex-shrink: 0;
+        }
+
+        .word-input {
+            width: 100%;
+            padding: 10px;
+            font-size: 1em;
+            border: 2px solid #444;
+            border-radius: 4px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 6px;
+            background: #1a1a1a;
+            color: #ffffff;
+            font-family: 'Courier New', monospace;
+            transition: border-color 0.2s ease;
+        }
+
+        .word-input:focus {
+            outline: none;
+            border-color: #888;
+        }
+
+        .word-input::placeholder {
+            color: #555;
+            letter-spacing: 2px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 10px;
+            font-size: 0.9em;
+            font-weight: bold;
+            color: #000000;
+            background: #ffffff;
+            border: 2px solid #ffffff;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 8px;
+            font-family: 'Courier New', monospace;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .submit-btn:hover {
+            background: #000000;
+            color: #ffffff;
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .submit-btn:disabled:hover {
+            background: #ffffff;
+            color: #000000;
+        }
+
+        .message {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+            text-align: center;
+            transition: all 0.3s ease;
+            transform: translateY(10px);
+            opacity: 0;
+            font-family: 'Courier New', monospace;
+            border: 1px solid #444;
+            font-size: 0.9em;
+            flex-shrink: 0;
+        }
+
+        .message.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .message.success {
+            background: #ffffff;
+            color: #000000;
+            border-color: #ffffff;
+        }
+
+        .message.error {
+            background: #2a2a2a;
+            color: #ffffff;
+            border-color: #666;
+        }
+
+        .message.info {
+            background: #333;
+            color: #ffffff;
+            border-color: #555;
+        }
+
+        .controls {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
+            flex-shrink: 0;
+        }
+
+        .control-btn {
+            padding: 8px 12px;
+            border: 1px solid #666;
+            background: transparent;
+            color: #ffffff;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .control-btn:hover {
+            background: #ffffff;
+            color: #000000;
+        }
+
+        .hint-section {
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(40, 40, 40, 0.5);
+            border-radius: 4px;
+            border: 1px solid #333;
+            font-family: 'Courier New', monospace;
+            flex-shrink: 0;
+        }
+
+        .hint-text {
+            color: #ccc;
+            font-size: 0.8em;
+            letter-spacing: 1px;
+        }
+
+        .current-row {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            
+            .game-container {
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 1.6em;
+                letter-spacing: 2px;
+            }
+            
+            .letter-box {
+                min-height: 30px;
+                font-size: 1em;
+            }
+            
+            .word-input {
+                letter-spacing: 4px;
+                padding: 8px;
+            }
+            
+            .submit-btn {
+                padding: 8px;
+            }
+            
+            .stats {
+                padding: 8px;
+            }
+            
+            .stat-value {
+                font-size: 1.2em;
+            }
+            
+            .controls {
+                gap: 6px;
+            }
+            
+            .control-btn {
+                padding: 6px 10px;
+                font-size: 0.75em;
+            }
+        }
+
+        @media (max-height: 600px) {
+            .game-container {
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 1.5em;
+                margin-bottom: 2px;
+            }
+            
+            .subtitle {
+                margin-bottom: 10px;
+                font-size: 0.75em;
+            }
+            
+            .stats {
+                margin-bottom: 10px;
+                padding: 8px;
+            }
+            
+            .game-board {
+                margin-bottom: 10px;
+            }
+            
+            .input-section {
+                margin-bottom: 10px;
+            }
+            
+            .message {
+                margin: 8px 0;
+                padding: 8px;
+            }
+            
+            .hint-section {
+                margin-top: 10px;
+                padding: 8px;
+            }
+        }
+
+        /* Typing indicator */
+        .typing-indicator {
+            position: absolute;
+            top: 50%;
+            right: 10px;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 20px;
+            background: #ffffff;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        /* Instructions Modal */
+        .instructions-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+            backdrop-filter: blur(5px);
+        }
+
+        .instructions-modal {
+            background: #1a1a1a;
+            border: 2px solid #333;
+            border-radius: 8px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .instructions-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid #333;
+            background: #2a2a2a;
+        }
+
+        .instructions-header h2 {
+            color: #ffffff;
+            font-family: 'Courier New', monospace;
+            font-size: 1.3em;
+            letter-spacing: 2px;
+            margin: 0;
+        }
+
+        .close-btn {
+            background: transparent;
+            border: 2px solid #666;
+            color: #ffffff;
+            width: 35px;
+            height: 35px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1.2em;
+            font-weight: bold;
+            transition: all 0.2s ease;
+            font-family: 'Courier New', monospace;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-btn:hover {
+            background: #ffffff;
+            color: #000000;
+            border-color: #ffffff;
+        }
+
+        .instructions-content {
+            padding: 20px;
+            color: #ffffff;
+            font-family: 'Courier New', monospace;
+            line-height: 1.6;
+        }
+
+        .instructions-content p {
+            margin-bottom: 15px;
+            font-size: 0.9em;
+        }
+
+        .instruction-section {
+            margin-bottom: 20px;
+        }
+
+        .instruction-section h3 {
+            color: #ffffff;
+            font-size: 1em;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+            border-bottom: 1px solid #444;
+            padding-bottom: 5px;
+        }
+
+        .instruction-section ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .instruction-section li {
+            margin-bottom: 8px;
+            padding-left: 15px;
+            position: relative;
+            font-size: 0.85em;
+        }
+
+        .instruction-section li:before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: #666;
+        }
+
+        .color-guide {
+            margin: 15px 0;
+            padding: 15px;
+            background: rgba(40, 40, 40, 0.5);
+            border-radius: 4px;
+            border: 1px solid #444;
+        }
+
+        .color-example {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            font-size: 0.85em;
+        }
+
+        .color-example:last-child {
+            margin-bottom: 0;
+        }
+
+        .example-box {
+            width: 35px;
+            height: 35px;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-right: 15px;
+            font-family: 'Courier New', monospace;
+            border: 2px solid;
+            flex-shrink: 0;
+        }
+
+        .example-box.correct {
+            background: #ffffff;
+            border-color: #ffffff;
+            color: #000000;
+        }
+
+        .example-box.present {
+            background: #666666;
+            border-color: #666666;
+            color: #ffffff;
+        }
+
+        .example-box.absent {
+            background: #2a2a2a;
+            border-color: #2a2a2a;
+            color: #666666;
+        }
+
+        .good-luck {
+            text-align: center;
+            font-weight: bold;
+            color: #ffffff;
+            margin-top: 20px;
+            font-size: 0.9em;
+            letter-spacing: 1px;
+        }
+
+        @media (max-width: 480px) {
+            .instructions-overlay {
+                padding: 15px;
+            }
+
+            .instructions-modal {
+                max-height: 95vh;
+            }
+
+            .instructions-header {
+                padding: 15px;
+            }
+
+            .instructions-header h2 {
+                font-size: 1.1em;
+            }
+
+            .instructions-content {
+                padding: 15px;
+            }
+
+            .close-btn {
+                width: 30px;
+                height: 30px;
+                font-size: 1em;
+            }
+
+            .color-example {
+                font-size: 0.8em;
+            }
+
+            .example-box {
+                width: 30px;
+                height: 30px;
+                font-size: 1em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>WORDLINE</h1>
+        <p class="subtitle">Find the hidden word in six attempts</p>
+        
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-value" id="attempts">0</div>
+                <div class="stat-label">Played</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="wins">0</div>
+                <div class="stat-label">Solved</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="streak">0</div>
+                <div class="stat-label">Streak</div>
+            </div>
+        </div>
+
+        <div class="game-board" id="gameBoard">
+            <!-- Game grid will be generated here -->
+        </div>
+
+        <div class="input-section">
+            <div style="position: relative;">
+                <input type="text" class="word-input" id="wordInput" placeholder="TYPE WORD" maxlength="5">
+            </div>
+            <button class="submit-btn" id="submitBtn">SUBMIT</button>
+        </div>
+
+        <div class="message" id="message"></div>
+
+        <div class="controls">
+            <button class="control-btn" id="newGameBtn">NEW</button>
+            <button class="control-btn" id="hintBtn">HINT</button>
+            <button class="control-btn" id="giveUpBtn">REVEAL</button>
+        </div>
+
+        <div class="hint-section" id="hintSection" style="display: none;">
+            <div class="hint-text" id="hintText"></div>
+        </div>
+
+        <!-- Instructions Modal -->
+        <div class="instructions-overlay" id="instructionsOverlay">
+            <div class="instructions-modal">
+                <div class="instructions-header">
+                    <h2>HOW TO PLAY</h2>
+                    <button class="close-btn" id="closeInstructions">✕</button>
+                </div>
+                <div class="instructions-content">
+                    <p><strong>OBJECTIVE:</strong> Guess the hidden 5-letter word in 6 attempts.</p>
+                    
+                    <div class="instruction-section">
+                        <h3>RULES:</h3>
+                        <ul>
+                            <li>Type a 5-letter word and press SUBMIT</li>
+                            <li>Each guess must be a valid word</li>
+                            <li>After each guess, tiles change color:</li>
+                        </ul>
+                    </div>
+
+                    <div class="color-guide">
+                        <div class="color-example">
+                            <div class="example-box correct">A</div>
+                            <span><strong>WHITE:</strong> Letter is in the word and in correct position</span>
+                        </div>
+                        <div class="color-example">
+                            <div class="example-box present">R</div>
+                            <span><strong>GRAY:</strong> Letter is in the word but wrong position</span>
+                        </div>
+                        <div class="color-example">
+                            <div class="example-box absent">S</div>
+                            <span><strong>DARK:</strong> Letter is not in the word</span>
+                        </div>
+                    </div>
+
+                    <div class="instruction-section">
+                        <h3>CONTROLS:</h3>
+                        <ul>
+                            <li><strong>NEW:</strong> Start a new game</li>
+                            <li><strong>HINT:</strong> Get a clue about the word</li>
+                            <li><strong>REVEAL:</strong> Show the answer (ends game)</li>
+                        </ul>
+                    </div>
+
+                    <p class="good-luck">Good luck finding the word!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class WordlineGame {
+            constructor() {
+                this.answerWords = [
+                    'ARISE', 'AUDIO', 'BEACH', 'BLAZE', 'BREAD', 'BREAK', 'BRING', 'BROAD',
+                    'CHAIR', 'CHARM', 'CHASE', 'CHEAP', 'CHEST', 'CHINA', 'CLAIM', 'CLEAR',
+                    'CLIMB', 'CLOCK', 'CLOSE', 'CLOUD', 'COUCH', 'COUNT', 'COURT', 'CRAFT',
+                    'CRANE', 'CREAM', 'CROWN', 'CURVE', 'DANCE', 'DEPTH', 'DOZEN', 'DREAM',
+                    'DRIVE', 'EARTH', 'EIGHT', 'ENEMY', 'ENTER', 'EQUAL', 'EXACT', 'FIELD',
+                    'FIGHT', 'FIRST', 'FLASH', 'FLOOR', 'FOCUS', 'FORCE', 'FRAME', 'FRESH',
+                    'FRONT', 'GHOST', 'GIVEN', 'GLASS', 'GLOBE', 'GRACE', 'GRAIN', 'GRAND',
+                    'GRANT', 'GRASS', 'GRAVE', 'GREAT', 'GREEN', 'GROUP', 'GUARD', 'GUESS',
+                    'GUIDE', 'HAPPY', 'HEART', 'HEAVY', 'HORSE', 'HOUSE', 'IMAGE', 'INDEX',
+                    'INNER', 'JAPAN', 'JUDGE', 'KNOWN', 'LARGE', 'LASER', 'LAUGH', 'LAYER',
+                    'LEARN', 'LEAVE', 'LEVEL', 'LIGHT', 'LIMIT', 'LIVES', 'LOOSE', 'LUCKY',
+                    'MAGIC', 'MAJOR', 'MARCH', 'MATCH', 'MAYBE', 'MEANT', 'METAL', 'MIGHT',
+                    'MINOR', 'MIXED', 'MODEL', 'MONEY', 'MONTH', 'MOUNT', 'MOUSE', 'MOUTH',
+                    'MUSIC', 'NEVER', 'NIGHT', 'NOISE', 'NORTH', 'NOVEL', 'OCEAN', 'OFFER',
+                    'ORDER', 'OTHER', 'PAINT', 'PAPER', 'PARTY', 'PEACE', 'PHASE', 'PHONE',
+                    'PHOTO', 'PIANO', 'PIECE', 'PLACE', 'PLAIN', 'PLANE', 'PLANT', 'PLATE',
+                    'POINT', 'POUND', 'POWER', 'PRESS', 'PRICE', 'PRIDE', 'PRIME', 'PRINT',
+                    'PROOF', 'PROUD', 'PROVE', 'QUEEN', 'QUICK', 'QUIET', 'QUITE', 'RADIO',
+                    'RAISE', 'RANGE', 'RAPID', 'REACH', 'READY', 'RIGHT', 'RIGID', 'RIVER',
+                    'ROUGH', 'ROUND', 'ROUTE', 'ROYAL', 'SCALE', 'SCENE', 'SCOPE', 'SCORE',
+                    'SENSE', 'SERVE', 'SEVEN', 'SHADE', 'SHAKE', 'SHAPE', 'SHARE', 'SHARP',
+                    'SHEET', 'SHELF', 'SHELL', 'SHIFT', 'SHINE', 'SHIRT', 'SHOCK', 'SHOOT',
+                    'SHORT', 'SIGHT', 'SINCE', 'SIXTH', 'SKILL', 'SLEEP', 'SLIDE', 'SMALL',
+                    'SMART', 'SMILE', 'SMOKE', 'SNAKE', 'SOLID', 'SOLVE', 'SORRY', 'SOUND',
+                    'SOUTH', 'SPACE', 'SPARE', 'SPEAK', 'SPEED', 'SPEND', 'SPLIT', 'SPORT',
+                    'STAFF', 'STAGE', 'STAKE', 'STAND', 'START', 'STATE', 'STEAM', 'STEEL',
+                    'STICK', 'STILL', 'STOCK', 'STONE', 'STORE', 'STORM', 'STORY', 'STRIP',
+                    'STUDY', 'STUFF', 'STYLE', 'SUGAR', 'SUPER', 'SWEET', 'TABLE', 'TASTE',
+                    'TEACH', 'TEETH', 'THANK', 'THEIR', 'THEME', 'THERE', 'THESE', 'THICK',
+                    'THING', 'THINK', 'THIRD', 'THOSE', 'THREE', 'THROW', 'THUMB', 'TIGHT',
+                    'TITLE', 'TODAY', 'TOPIC', 'TOTAL', 'TOUCH', 'TOUGH', 'TOWER', 'TRACK',
+                    'TRADE', 'TRAIL', 'TRAIN', 'TREAT', 'TREND', 'TRIAL', 'TRIBE', 'TRICK',
+                    'TRIED', 'TRUCK', 'TRULY', 'TRUST', 'TRUTH', 'TWICE', 'TWIST', 'UNDER',
+                    'UNION', 'UNITY', 'UNTIL', 'UPPER', 'UPSET', 'URBAN', 'USAGE', 'USUAL',
+                    'VALID', 'VALUE', 'VIDEO', 'VIRUS', 'VISIT', 'VITAL', 'VOICE', 'WASTE',
+                    'WATCH', 'WATER', 'WHEEL', 'WHERE', 'WHICH', 'WHILE', 'WHITE', 'WHOLE',
+                    'WOMAN', 'WORLD', 'WORRY', 'WORSE', 'WORST', 'WORTH', 'WOULD', 'WRITE',
+                    'WRONG', 'YOUNG', 'YOUTH'
+                ];
+                
+                this.targetWord = '';
+                this.currentInput = '';
+                this.attemptCount = 0;
+                this.maxAttempts = 6;
+                this.isGameComplete = false;
+                this.previousGuesses = [];
+                this.gameStats = {
+                    attempts: 0,
+                    wins: 0,
+                    streak: 0
+                };
+                
+                this.loadGameData();
+                this.checkFirstVisit();
+                this.startNewGame();
+                this.bindEventHandlers();
+            }
+
+            startNewGame() {
+                this.targetWord = this.answerWords[Math.floor(Math.random() * this.answerWords.length)];
+                this.attemptCount = 0;
+                this.isGameComplete = false;
+                this.previousGuesses = [];
+                this.renderGameBoard();
+                this.refreshDisplay();
+                this.clearMessage();
+                this.hideHintPanel();
+                
+                // Development helper - remove for production
+                if (window.location.hostname === 'localhost') {
+                    console.log('Target word:', this.targetWord);
+                }
+            }
+
+            renderGameBoard() {
+                const boardElement = document.getElementById('gameBoard');
+                boardElement.innerHTML = '';
+                
+                for (let row = 0; row < this.maxAttempts; row++) {
+                    const rowElement = document.createElement('div');
+                    rowElement.className = 'guess-row';
+                    rowElement.id = `row-${row}`;
+                    
+                    if (row === this.attemptCount && !this.isGameComplete) {
+                        rowElement.classList.add('current-row');
+                    }
+                    
+                    for (let col = 0; col < 5; col++) {
+                        const cellElement = document.createElement('div');
+                        cellElement.className = 'letter-box';
+                        cellElement.id = `cell-${row}-${col}`;
+                        rowElement.appendChild(cellElement);
+                    }
+                    
+                    boardElement.appendChild(rowElement);
+                }
+            }
+
+            bindEventHandlers() {
+                const inputElement = document.getElementById('wordInput');
+                const submitElement = document.getElementById('submitBtn');
+                const newGameElement = document.getElementById('newGameBtn');
+                const hintElement = document.getElementById('hintBtn');
+                const revealElement = document.getElementById('giveUpBtn');
+
+                inputElement.addEventListener('input', (event) => {
+                    event.target.value = event.target.value.toUpperCase().replace(/[^A-Z]/g, '');
+                    this.currentInput = event.target.value;
+                });
+
+                inputElement.addEventListener('keydown', (event) => {
+                    if (event.key === 'Enter' && !this.isGameComplete && this.currentInput.length === 5) {
+                        this.processGuess();
+                    }
+                });
+
+                submitElement.addEventListener('click', () => {
+                    if (!this.isGameComplete && this.currentInput.length === 5) {
+                        this.processGuess();
+                    }
+                });
+
+                newGameElement.addEventListener('click', () => {
+                    this.startNewGame();
+                });
+
+                hintElement.addEventListener('click', () => {
+                    this.displayHint();
+                });
+
+                revealElement.addEventListener('click', () => {
+                    this.revealAnswer();
+                });
+
+                // Instructions modal handlers
+                const closeInstructionsElement = document.getElementById('closeInstructions');
+                const instructionsOverlay = document.getElementById('instructionsOverlay');
+
+                closeInstructionsElement.addEventListener('click', () => {
+                    this.closeInstructions();
+                });
+
+                // Close instructions when clicking outside modal
+                instructionsOverlay.addEventListener('click', (event) => {
+                    if (event.target === instructionsOverlay) {
+                        this.closeInstructions();
+                    }
+                });
+
+                // Close instructions with Escape key
+                document.addEventListener('keydown', (event) => {
+                    if (event.key === 'Escape') {
+                        this.closeInstructions();
+                    }
+                });
+            }
+
+            processGuess() {
+                if (this.isGameComplete || this.currentInput.length !== 5) return;
+
+                const guess = this.currentInput.toUpperCase();
+                
+                this.previousGuesses.push(guess);
+                this.analyzeGuess(guess);
+                this.attemptCount++;
+                
+                if (guess === this.targetWord) {
+                    this.isGameComplete = true;
+                    this.gameStats.wins++;
+                    this.gameStats.streak++;
+                    this.displayMessage('SUCCESS! WORD FOUND', 'success');
+                } else if (this.attemptCount >= this.maxAttempts) {
+                    this.isGameComplete = true;
+                    this.gameStats.streak = 0;
+                    this.displayMessage(`FAILED. WORD WAS: ${this.targetWord}`, 'error');
+                }
+
+                this.gameStats.attempts++;
+                this.saveGameData();
+                this.refreshDisplay();
+                this.resetInput();
+            }
+
+            analyzeGuess(guess) {
+                const currentRow = document.getElementById(`row-${this.attemptCount}`);
+                const targetLetters = this.targetWord.split('');
+                const guessLetters = guess.split('');
+                const evaluationResult = new Array(5).fill('absent');
+                
+                // First pass: mark exact matches
+                for (let i = 0; i < 5; i++) {
+                    if (guessLetters[i] === targetLetters[i]) {
+                        evaluationResult[i] = 'correct';
+                        targetLetters[i] = null;
+                    }
+                }
+                
+                // Second pass: mark letters in wrong positions
+                for (let i = 0; i < 5; i++) {
+                    if (evaluationResult[i] === 'absent' && targetLetters.includes(guessLetters[i])) {
+                        evaluationResult[i] = 'present';
+                        targetLetters[targetLetters.indexOf(guessLetters[i])] = null;
+                    }
+                }
+                
+                // Apply results with staggered timing
+                for (let i = 0; i < 5; i++) {
+                    const cellElement = document.getElementById(`cell-${this.attemptCount}-${i}`);
+                    setTimeout(() => {
+                        cellElement.textContent = guessLetters[i];
+                        cellElement.className = `letter-box ${evaluationResult[i]}`;
+                    }, i * 80);
+                }
+                
+                // Remove current row highlighting
+                setTimeout(() => {
+                    currentRow.classList.remove('current-row');
+                    if (this.attemptCount + 1 < this.maxAttempts && !this.isGameComplete) {
+                        document.getElementById(`row-${this.attemptCount + 1}`).classList.add('current-row');
+                    }
+                }, 400);
+            }
+
+            displayHint() {
+                const hintPanel = document.getElementById('hintSection');
+                const hintContent = document.getElementById('hintText');
+                
+                const hintOptions = [
+                    `FIRST LETTER: ${this.targetWord[0]}`,
+                    `LAST LETTER: ${this.targetWord[4]}`,
+                    `CONTAINS: ${this.targetWord[Math.floor(Math.random() * 5)]}`,
+                    `LENGTH: ${this.targetWord.length} LETTERS`,
+                    `POSITION 2: ${this.targetWord[1]}`
+                ];
+                
+                const selectedHint = hintOptions[Math.floor(Math.random() * hintOptions.length)];
+                hintContent.textContent = selectedHint;
+                hintPanel.style.display = 'block';
+                
+                setTimeout(() => {
+                    hintPanel.style.display = 'none';
+                }, 4000);
+            }
+
+            hideHintPanel() {
+                const hintPanel = document.getElementById('hintSection');
+                hintPanel.style.display = 'none';
+            }
+
+            revealAnswer() {
+                if (this.isGameComplete) return;
+                
+                this.isGameComplete = true;
+                this.gameStats.streak = 0;
+                this.gameStats.attempts++;
+                this.displayMessage(`REVEALED: ${this.targetWord}`, 'info');
+                this.saveGameData();
+                this.refreshDisplay();
+            }
+
+            displayMessage(text, messageType) {
+                const messageElement = document.getElementById('message');
+                messageElement.textContent = text;
+                messageElement.className = `message ${messageType} show`;
+                
+                setTimeout(() => {
+                    messageElement.classList.remove('show');
+                }, 2500);
+            }
+
+            clearMessage() {
+                const messageElement = document.getElementById('message');
+                messageElement.classList.remove('show');
+            }
+
+            resetInput() {
+                const inputElement = document.getElementById('wordInput');
+                inputElement.value = '';
+                this.currentInput = '';
+            }
+
+            refreshDisplay() {
+                document.getElementById('attempts').textContent = this.gameStats.attempts;
+                document.getElementById('wins').textContent = this.gameStats.wins;
+                document.getElementById('streak').textContent = this.gameStats.streak;
+                
+                const submitElement = document.getElementById('submitBtn');
+                const inputElement = document.getElementById('wordInput');
+                
+                if (this.isGameComplete) {
+                    submitElement.disabled = true;
+                    inputElement.disabled = true;
+                } else {
+                    submitElement.disabled = false;
+                    inputElement.disabled = false;
+                    inputElement.focus();
+                }
+            }
+
+            saveGameData() {
+                const statsData = {
+                    attempts: this.gameStats.attempts,
+                    wins: this.gameStats.wins,
+                    streak: this.gameStats.streak
+                };
+                window.wordlineStats = statsData;
+            }
+
+            loadGameData() {
+                if (window.wordlineStats) {
+                    this.gameStats = { ...window.wordlineStats };
+                }
+            }
+
+            checkFirstVisit() {
+                const hasVisited = window.wordlineVisited;
+                if (!hasVisited) {
+                    this.showInstructions();
+                    window.wordlineVisited = true;
+                }
+            }
+
+            showInstructions() {
+                const instructionsOverlay = document.getElementById('instructionsOverlay');
+                instructionsOverlay.style.display = 'flex';
+            }
+
+            closeInstructions() {
+                const instructionsOverlay = document.getElementById('instructionsOverlay');
+                instructionsOverlay.style.display = 'none';
+            }
+        }
+
+        // Initialize game when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            new WordlineGame();
+        });
+    </script>
+</body>
+</html>
